@@ -1,2 +1,8 @@
+import System.IO
+
+contentToFloats :: String -> [Float]
+contentToFloats str = map (\x -> read x :: Float) $ lines str
+
 main = do
-    putStrLn "Hello World"
+    content <- getContents
+    putStrLn $ show $ contentToFloats content
