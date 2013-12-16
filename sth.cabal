@@ -50,7 +50,7 @@ executable sth
   main-is: sth.hs
   
   -- Modules included in this executable, other than Main.
-  -- other-modules:       
+  other-modules: STHLib
   
   -- Other library packages from which modules are imported.
   build-depends:       base ==4.6.*
