@@ -70,7 +70,7 @@ showStats list (Max:xs) = ("Max: " ++ show (STHLib.max list)) : showStats list x
 showStats list (Summary:xs) = showStats list xs
 
 contentToFloats :: String -> [Float]
-contentToFloats = (map read) . lines
+contentToFloats = map read . lines
 
 -- Mutable zone
 
