@@ -52,7 +52,7 @@ flags =
 
 parse argv = case getOpt Permute flags argv of
     (args, fs, []) -> do
-        let files = if null fs then ["."] else fs
+        let files = if null fs then [] else fs
         if Help `elem` args
             then do hPutStrLn stderr (usageInfo header flags)
                     exitWith ExitSuccess
@@ -60,7 +60,7 @@ parse argv = case getOpt Permute flags argv of
     (_, _, errs) -> do
         hPutStrLn stderr (concat errs ++ usageInfo header flags)
         exitWith (ExitFailure 1)
-    where header = "Usage: sth [options]"
+    where header = "Usage: sth [options] [files]"
 
 showStats :: [Float] -> [Flags] -> [String]
 showStats list [] = []
@@ -79,9 +79,14 @@ showStats list (Max:xs) = ["Max: " ++ (show $ STHLib.max list)] ++ (showStats li
 contentToFloats :: String -> [Float]
 contentToFloats str = map (\x -> read x :: Float) $ lines str
 
+getData files = do
+    if files == []
+        then getContents
+        else map readFile files !! 0
+
 main = do
-    content <- getContents
     (as, fs) <- getArgs >>= parse
+    content <- getData fs
 
     if as == []
         then putStr $ unlines $ showStats (contentToFloats content) allStats
