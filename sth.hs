@@ -19,9 +19,11 @@ data Flags
     | Q3
     | Max
     | Help
+    | Summary
     deriving (Eq,Ord,Enum,Show,Bounded)
 
 allStats = [Count, Mean, Stddev, Stderr, Sum, Var, Min, Q1, Median, Q3, Max]
+summaryStats = [Min, Q1, Median, Q3, Max]
 
 flags =
     [Option "nN" ["count"]    (NoArg Count)
@@ -46,6 +48,8 @@ flags =
         "Display the third quartile"
     ,Option [] ["max"]    (NoArg Max)
         "Display the maximun"
+    ,Option [] ["summary"]    (NoArg Summary)
+        "Display the summary info"
     ,Option "h" ["help"]    (NoArg Help)
         "Print the help message"
     ]
@@ -63,6 +67,7 @@ showStats list (Q1:xs) = ("Q1: " ++ show (STHLib.q1 list)) : showStats list xs
 showStats list (Median:xs) = ("Median: " ++ show (STHLib.median list)) : showStats list xs
 showStats list (Q3:xs) = ("Q3: " ++ show (STHLib.q3 list)) : showStats list xs
 showStats list (Max:xs) = ("Max: " ++ show (STHLib.max list)) : showStats list xs
+showStats list (Summary:xs) = showStats list xs
 
 contentToFloats :: String -> [Float]
 contentToFloats = (map read) . lines
@@ -70,16 +75,19 @@ contentToFloats = (map read) . lines
 -- Mutable zone
 
 parse argv = case getOpt Permute flags argv of
-    (args, fs, []) -> do
+    (as, fs, []) -> do
         let files = if null fs then [] else fs
+        let args = if Summary `elem` as then as ++ summaryStats else as
+
         if Help `elem` args
-            then do hPutStrLn stderr (usageInfo header flags)
+            then do hPutStrLn stderr usage
                     exitSuccess
             else return (L.nub args, files)
     (_, _, errs) -> do
-        hPutStrLn stderr (concat errs ++ usageInfo header flags)
+        hPutStrLn stderr (concat errs ++ usage)
         exitWith (ExitFailure 1)
     where header = "Usage: sth [options] [files]"
+          usage = usageInfo header flags
 
 
 readFiles :: [FilePath] -> IO String
