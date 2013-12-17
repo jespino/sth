@@ -5,18 +5,18 @@ import qualified Data.List as L
 min::[Float] -> Float
 min = foldl1 Prelude.min
 
-q1::[Float] -> Float
-q1 list = sortedList!!((length sortedList) `div` 4)
-              where sortedList = L.sort list
-
-median::[Float] -> Float
-median list = sortedList!!((length sortedList) `div` 2)
+quartile:: Int -> [Float] -> Float
+quartile n list= sortedList !! ((length list `div` 4) * n)
                   where sortedList = L.sort list
 
+q1::[Float] -> Float
+q1 = quartile 1
+
+median::[Float] -> Float
+median = quartile 2
 
 q3::[Float] -> Float
-q3 list = sortedList!!(((length sortedList) `div` 4) * 3)
-              where sortedList = L.sort list
+q3 = quartile 3
 
 max::[Float] -> Float
 max = foldl1 Prelude.max
