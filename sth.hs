@@ -79,10 +79,13 @@ showStats list (Max:xs) = ["Max: " ++ (show $ STHLib.max list)] ++ (showStats li
 contentToFloats :: String -> [Float]
 contentToFloats str = map (\x -> read x :: Float) $ lines str
 
+readFiles :: [FilePath] -> IO String
+readFiles = fmap concat . mapM readFile
+
 getData files = do
     if files == []
         then getContents
-        else map readFile files !! 0
+        else readFiles files
 
 main = do
     (as, fs) <- getArgs >>= parse
