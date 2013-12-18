@@ -57,11 +57,11 @@ instance Show Flag where
 
 headers :: [Stat] -> String
 headers [] = ""
-headers ((Stat f _):xs) = (printf "%10s" $ show f) ++ headers xs
+headers (Stat f _:xs) = printf "%10s" (show f) ++ headers xs
 
 values :: [Stat] -> String
 values [] = ""
-values ((Stat _ (Just v)):xs) = (printf "%10f" v) ++ values xs
+values (Stat _ (Just v):xs) = printf "%10f" v ++ values xs
 
 allStats = [Count, Mean, Stddev, Stderr, Sum, Var, Min, Q1, Median, Q3, Max]
 summaryStats = [Min, Q1, Median, Q3, Max]
@@ -86,17 +86,17 @@ flags = [
 
 generateStatList :: [Flag] -> [Float] -> [Stat]
 generateStatList [] content = []
-generateStatList (Count:xs) content = (Stat Count (Just $ STHLib.count content)) : generateStatList xs content
-generateStatList (Mean:xs) content = (Stat Mean (Just $ STHLib.mean content)) : generateStatList xs content
-generateStatList (Stddev:xs) content = (Stat Stddev (Just $ STHLib.stddev content)) : generateStatList xs content
-generateStatList (Stderr:xs) content = (Stat Stderr (Just $ STHLib.stderr content)) : generateStatList xs content
-generateStatList (Sum:xs) content = (Stat Sum (Just $ STHLib.sum content)) : generateStatList xs content
-generateStatList (Var:xs) content = (Stat Var (Just $ STHLib.variance content)) : generateStatList xs content
-generateStatList (Min:xs) content = (Stat Min (Just $ STHLib.min content)) : generateStatList xs content
-generateStatList (Q1:xs) content = (Stat Q1 (Just $ STHLib.q1 content)) : generateStatList xs content
-generateStatList (Median:xs) content = (Stat Median (Just $ STHLib.median content)) : generateStatList xs content
-generateStatList (Q3:xs) content = (Stat Q3 (Just $ STHLib.q3 content)) : generateStatList xs content
-generateStatList (Max:xs) content = (Stat Max (Just $ STHLib.max content)) : generateStatList xs content
+generateStatList (Count:xs) content = Stat Count (Just $ STHLib.count content) : generateStatList xs content
+generateStatList (Mean:xs) content = Stat Mean (Just $ STHLib.mean content) : generateStatList xs content
+generateStatList (Stddev:xs) content = Stat Stddev (Just $ STHLib.stddev content) : generateStatList xs content
+generateStatList (Stderr:xs) content = Stat Stderr (Just $ STHLib.stderr content) : generateStatList xs content
+generateStatList (Sum:xs) content = Stat Sum (Just $ STHLib.sum content) : generateStatList xs content
+generateStatList (Var:xs) content = Stat Var (Just $ STHLib.variance content) : generateStatList xs content
+generateStatList (Min:xs) content = Stat Min (Just $ STHLib.min content) : generateStatList xs content
+generateStatList (Q1:xs) content = Stat Q1 (Just $ STHLib.q1 content) : generateStatList xs content
+generateStatList (Median:xs) content = Stat Median (Just $ STHLib.median content) : generateStatList xs content
+generateStatList (Q3:xs) content = Stat Q3 (Just $ STHLib.q3 content) : generateStatList xs content
+generateStatList (Max:xs) content = Stat Max (Just $ STHLib.max content) : generateStatList xs content
 generateStatList (_:xs) content = generateStatList xs content
 
 contentToStats :: String -> [Flag] -> Stats
