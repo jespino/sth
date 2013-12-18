@@ -7,7 +7,7 @@ import qualified Data.List as L
 import qualified STHLib
 
 
-data Flags
+data Flag
     = Count
     | Mean
     | Stddev
@@ -23,95 +23,91 @@ data Flags
     | Summary
     | Complete
     | Transpose
-    deriving (Eq,Ord,Enum,Show,Bounded)
+    deriving (Eq,Ord,Enum,Bounded)
+
+data OutputFormat = Normal | Transposed deriving (Eq, Show)
+
+data Stat = Stat Flag (Maybe Float)
+data Stats = Stats OutputFormat [Stat]
+
+instance Show Stats where
+    show (Stats Normal x) = unlines [headers x, values x]
+    show (Stats Transposed x) = x >>= show
+
+instance Show Stat where
+    show (Stat _ Nothing) = ""
+    show (Stat f (Just x)) = show f ++ ": " ++ show x ++ "\n"
+
+instance Show Flag where
+    show Count = "Count"
+    show Mean = "Mean"
+    show Stddev = "Stddev"
+    show Stderr = "Stderr"
+    show Sum = "Sum"
+    show Var = "Variance"
+    show Min = "Min"
+    show Q1 = "Q1"
+    show Median = "Median"
+    show Q3 = "Q3"
+    show Max = "Max"
+    show Help = "Help"
+    show Summary = "Summary"
+    show Complete = "Complete"
+    show Transpose = "Transpose"
+
+headers :: [Stat] -> String
+headers [] = ""
+headers ((Stat f _):xs) = (printf "%10s" $ show f) ++ headers xs
+
+values :: [Stat] -> String
+values [] = ""
+values ((Stat _ (Just v)):xs) = (printf "%10f" v) ++ values xs
 
 allStats = [Count, Mean, Stddev, Stderr, Sum, Var, Min, Q1, Median, Q3, Max]
 summaryStats = [Min, Q1, Median, Q3, Max]
 
-flags =
-    [Option "nN" ["count"]    (NoArg Count)
-        "Display the count"
-    ,Option "m" ["mean", "avg"]    (NoArg Mean)
-        "Display the mean"
-    ,Option [] ["stddev", "sd"]    (NoArg Stddev)
-        "Display the standard deviation"
-    ,Option [] ["stderr", "se", "sem"]    (NoArg Stderr)
-        "Display the standard error"
-    ,Option "s" ["sum"]    (NoArg Sum)
-        "Display the sumatory"
-    ,Option [] ["var", "variance"]    (NoArg Var)
-        "Display the variance"
-    ,Option [] ["min"]    (NoArg Min)
-        "Display the minimun"
-    ,Option [] ["q1"]    (NoArg Q1)
-        "Display the first quartile"
-    ,Option [] ["median"]    (NoArg Median)
-        "Display the mediam"
-    ,Option [] ["q3"]    (NoArg Q3)
-        "Display the third quartile"
-    ,Option [] ["max"]    (NoArg Max)
-        "Display the maximun"
-    ,Option [] ["summary"]    (NoArg Summary)
-        "Display the summary info"
-    ,Option [] ["complete"]    (NoArg Complete)
-        "Display the complete info"
-    ,Option [] ["transpose-output", "tn"]    (NoArg Transpose)
-        "Display the info in vertical mode"
-    ,Option "h" ["help"]    (NoArg Help)
-        "Print the help message"
+flags = [
+        Option "nN" ["count"] (NoArg Count) "Display the count",
+        Option "m" ["mean", "avg"] (NoArg Mean) "Display the mean",
+        Option [] ["stddev", "sd"] (NoArg Stddev) "Display the standard deviation",
+        Option [] ["stderr", "se", "sem"] (NoArg Stderr) "Display the standard error",
+        Option "s" ["sum"] (NoArg Sum) "Display the sumatory",
+        Option [] ["var", "variance"] (NoArg Var) "Display the variance",
+        Option [] ["min"] (NoArg Min) "Display the minimun",
+        Option [] ["q1"] (NoArg Q1) "Display the first quartile",
+        Option [] ["median"] (NoArg Median) "Display the mediam",
+        Option [] ["q3"] (NoArg Q3) "Display the third quartile",
+        Option [] ["max"] (NoArg Max) "Display the maximun",
+        Option [] ["summary"] (NoArg Summary) "Display the summary info",
+        Option [] ["complete"] (NoArg Complete) "Display the complete info",
+        Option [] ["transpose-output", "tn"] (NoArg Transpose) "Display the info in vertical mode",
+        Option "h" ["help"] (NoArg Help) "Print the help message"
     ]
 
-showStats :: [Float] -> [Flags] -> [String]
-showStats _ [] = []
-showStats list (Count:xs) = ("Count: " ++ show (STHLib.count list)) : showStats list xs
-showStats list (Mean:xs) = ("Mean: " ++ show (STHLib.mean list)) : showStats list xs
-showStats list (Stddev:xs) = ("Stddev: " ++ show (STHLib.stddev list)) : showStats list xs
-showStats list (Stderr:xs) = ("Stderr: " ++ show (STHLib.stderr list)) : showStats list xs
-showStats list (Sum:xs) = ("Sum: " ++ show (STHLib.sum list)) : showStats list xs
-showStats list (Var:xs) = ("Variance: " ++ show (STHLib.variance list)) : showStats list xs
-showStats list (Min:xs) = ("Min: " ++ show (STHLib.min list)) : showStats list xs
-showStats list (Q1:xs) = ("Q1: " ++ show (STHLib.q1 list)) : showStats list xs
-showStats list (Median:xs) = ("Median: " ++ show (STHLib.median list)) : showStats list xs
-showStats list (Q3:xs) = ("Q3: " ++ show (STHLib.q3 list)) : showStats list xs
-showStats list (Max:xs) = ("Max: " ++ show (STHLib.max list)) : showStats list xs
-showStats list (Transpose:xs) = showStats list xs
+generateStatList :: [Flag] -> [Float] -> [Stat]
+generateStatList [] content = []
+generateStatList (Count:xs) content = (Stat Count (Just $ STHLib.count content)) : generateStatList xs content
+generateStatList (Mean:xs) content = (Stat Mean (Just $ STHLib.mean content)) : generateStatList xs content
+generateStatList (Stddev:xs) content = (Stat Stddev (Just $ STHLib.stddev content)) : generateStatList xs content
+generateStatList (Stderr:xs) content = (Stat Stderr (Just $ STHLib.stderr content)) : generateStatList xs content
+generateStatList (Sum:xs) content = (Stat Sum (Just $ STHLib.sum content)) : generateStatList xs content
+generateStatList (Var:xs) content = (Stat Var (Just $ STHLib.variance content)) : generateStatList xs content
+generateStatList (Min:xs) content = (Stat Min (Just $ STHLib.min content)) : generateStatList xs content
+generateStatList (Q1:xs) content = (Stat Q1 (Just $ STHLib.q1 content)) : generateStatList xs content
+generateStatList (Median:xs) content = (Stat Median (Just $ STHLib.median content)) : generateStatList xs content
+generateStatList (Q3:xs) content = (Stat Q3 (Just $ STHLib.q3 content)) : generateStatList xs content
+generateStatList (Max:xs) content = (Stat Max (Just $ STHLib.max content)) : generateStatList xs content
+generateStatList (_:xs) content = generateStatList xs content
 
-showStatsHeaders :: [Flags] -> String
-showStatsHeaders [] = ""
-showStatsHeaders (Count:xs) = printf "%10s" "Count" ++ showStatsHeaders xs
-showStatsHeaders (Mean:xs) = printf "%10s" "Mean" ++ showStatsHeaders xs
-showStatsHeaders (Stddev:xs) = printf "%10s" "Stddev" ++ showStatsHeaders xs
-showStatsHeaders (Stderr:xs) = printf "%10s" "Stderr" ++ showStatsHeaders xs
-showStatsHeaders (Sum:xs) = printf "%10s" "Sum" ++ showStatsHeaders xs
-showStatsHeaders (Var:xs) = printf "%10s" "Variance" ++ showStatsHeaders xs
-showStatsHeaders (Min:xs) = printf "%10s" "Min" ++ showStatsHeaders xs
-showStatsHeaders (Q1:xs) = printf "%10s" "Q1" ++ showStatsHeaders xs
-showStatsHeaders (Median:xs) = printf "%10s" "Median" ++ showStatsHeaders xs
-showStatsHeaders (Q3:xs) = printf "%10s" "Q3" ++ showStatsHeaders xs
-showStatsHeaders (Max:xs) = printf "%10s" "Max" ++ showStatsHeaders xs
-showStatsHeaders (Transpose:xs) = showStatsHeaders xs
-
-showHStats :: [Float] -> [Flags] -> String
-showHStats _ [] = ""
-showHStats list (Count:xs) = printf "%10f" (STHLib.count list) ++ showHStats list xs
-showHStats list (Mean:xs) = printf "%10f" (STHLib.mean list) ++ showHStats list xs
-showHStats list (Stddev:xs) = printf "%10f" (STHLib.stddev list) ++ showHStats list xs
-showHStats list (Stderr:xs) = printf "%10f" (STHLib.stderr list) ++ showHStats list xs
-showHStats list (Sum:xs) = printf "%10f" (STHLib.sum list) ++ showHStats list xs
-showHStats list (Var:xs) = printf "%10f" (STHLib.variance list) ++ showHStats list xs
-showHStats list (Min:xs) = printf "%10f" (STHLib.min list) ++ showHStats list xs
-showHStats list (Q1:xs) = printf "%10f" (STHLib.q1 list) ++ showHStats list xs
-showHStats list (Median:xs) = printf "%10f" (STHLib.median list) ++ showHStats list xs
-showHStats list (Q3:xs) = printf "%10f" (STHLib.q3 list) ++ showHStats list xs
-showHStats list (Max:xs) = printf "%10f" (STHLib.max list) ++ showHStats list xs
-showHStats list (Transpose:xs) = showHStats list xs
-
-contentToFloats :: String -> [Float]
-contentToFloats = map read . lines
+contentToStats :: String -> [Flag] -> Stats
+contentToStats content flags = if Transpose `elem` flags
+                                  then Stats Transposed (generateStatList flags values)
+                                  else Stats Normal (generateStatList flags values)
+                               where values = map read $ lines content
 
 -- Mutable zone
 
-populateArgs :: [Flags] -> [Flags]
+populateArgs :: [Flag] -> [Flag]
 populateArgs [] = []
 populateArgs (Summary:xs) = summaryStats ++ populateArgs xs
 populateArgs (Complete:xs) = allStats ++ populateArgs xs
@@ -143,7 +139,4 @@ main = do
     (as, fs) <- getArgs >>= parse
     content <- getData fs
 
-    if Transpose `elem` as
-        then putStr $ unlines $ showStats (contentToFloats content) (if null [ x | x <- as, x /= Transpose] then allStats else as)
-        else do putStrLn $ showStatsHeaders (if null as then allStats else as)
-                putStrLn $ showHStats (contentToFloats content) (if null as then allStats else as)
+    putStr $ show $ contentToStats content as
