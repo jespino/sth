@@ -50,7 +50,7 @@ instance Show Stat where
 
 data Stats = Stats OutputFormat [Stat]
 instance Show Stats where
-    show (Stats Normal (x:[])) = values [x] ++ "\n"
+    show (Stats Normal (Stat _ (Just v):[])) = show v ++ "\n"
     show (Stats Normal x) = unlines [headers x, values x]
     show (Stats Transposed x) = x >>= show
 
@@ -140,4 +140,4 @@ main = do
     (as, fs) <- getArgs >>= parse
     content <- getData fs
 
-    putStr $ show $ contentToStats content as
+    putStr $ show $ contentToStats content (if null as then allStats else as)
