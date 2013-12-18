@@ -24,20 +24,6 @@ data Flag
     | Complete
     | Transpose
     deriving (Eq,Ord,Enum,Bounded)
-
-data OutputFormat = Normal | Transposed deriving (Eq, Show)
-
-data Stat = Stat Flag (Maybe Float)
-data Stats = Stats OutputFormat [Stat]
-
-instance Show Stats where
-    show (Stats Normal x) = unlines [headers x, values x]
-    show (Stats Transposed x) = x >>= show
-
-instance Show Stat where
-    show (Stat _ Nothing) = ""
-    show (Stat f (Just x)) = show f ++ ": " ++ show x ++ "\n"
-
 instance Show Flag where
     show Count = "Count"
     show Mean = "Mean"
@@ -54,6 +40,19 @@ instance Show Flag where
     show Summary = "Summary"
     show Complete = "Complete"
     show Transpose = "Transpose"
+
+data OutputFormat = Normal | Transposed deriving (Eq, Show)
+
+data Stat = Stat Flag (Maybe Float)
+instance Show Stat where
+    show (Stat _ Nothing) = ""
+    show (Stat f (Just x)) = show f ++ ": " ++ show x ++ "\n"
+
+data Stats = Stats OutputFormat [Stat]
+instance Show Stats where
+    show (Stats Normal (x:[])) = values [x] ++ "\n"
+    show (Stats Normal x) = unlines [headers x, values x]
+    show (Stats Transposed x) = x >>= show
 
 headers :: [Stat] -> String
 headers [] = ""
