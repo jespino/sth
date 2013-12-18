@@ -105,14 +105,15 @@ contentToStats content flags = if Transpose `elem` flags
                                   else Stats Normal (generateStatList flags values)
                                where values = map read $ lines content
 
--- Mutable zone
-
 populateArgs :: [Flag] -> [Flag]
 populateArgs [] = []
 populateArgs (Summary:xs) = summaryStats ++ populateArgs xs
 populateArgs (Complete:xs) = allStats ++ populateArgs xs
 populateArgs (x:xs) = x : populateArgs xs
 
+-- Mutable zone
+
+parse :: [String] -> IO ([Flag], [String])
 parse argv = case getOpt Permute flags argv of
     (args, fs, []) -> do
         let files = if null fs then [] else fs
@@ -131,6 +132,7 @@ parse argv = case getOpt Permute flags argv of
 readFiles :: [FilePath] -> IO String
 readFiles = fmap concat . mapM readFile
 
+getData :: [String] -> IO String
 getData files = if null files
                     then getContents
                     else readFiles files
