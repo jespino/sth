@@ -1,8 +1,11 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 import System.Console.GetOpt
 import System.Environment
 import System.Exit
 import System.IO
 import Text.Printf
+import Control.Monad
 import qualified Data.List as L
 import qualified STHLib
 
@@ -98,12 +101,6 @@ generateStatList (Q3:xs) content = Stat Q3 (Just $ STHLib.q3 content) : generate
 generateStatList (Max:xs) content = Stat Max (Just $ STHLib.max content) : generateStatList xs content
 generateStatList (_:xs) content = generateStatList xs content
 
-contentToStats :: String -> [Flag] -> Stats
-contentToStats content flags = if Transpose `elem` flags
-                                  then Stats Transposed (generateStatList flags values)
-                                  else Stats Normal (generateStatList flags values)
-                               where values = map read $ lines content
-
 populateArgs :: [Flag] -> [Flag]
 populateArgs [] = []
 populateArgs (Summary:xs) = summaryStats ++ populateArgs xs
@@ -136,8 +133,15 @@ getData files = if null files
                     then getContents
                     else readFiles files
 
+contentToStats :: [Flag] -> String -> IO Stats
+contentToStats flags content = return (if Transpose `elem` flags
+                                  then Stats Transposed (generateStatList flags values)
+                                  else Stats Normal (generateStatList flags values))
+                               where values = map read $ lines content
+
 main = do
     (as, fs) <- getArgs >>= parse
-    content <- getData fs
 
-    putStr $ show $ contentToStats content (if null as then allStats else as)
+    let flags = if null as then allStats else as
+
+    putStr =<< (liftM show $ getData fs >>= contentToStats flags)

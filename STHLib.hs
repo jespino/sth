@@ -31,12 +31,11 @@ stddev::[Float] -> Float
 stddev = sqrt . variance
 
 stderr::[Float] -> Float
-stderr list = stddev list / sqrt (count list)
+stderr list = stddev list / (sqrt . count $ list)
 
 sum::[Float] -> Float
 sum = Prelude.sum
 
 variance::[Float] -> Float
-variance list = (1 / count list) * Prelude.sum listWithoutMean
-                    where listMean = mean list
-                          listWithoutMean = map (\x -> (x - listMean)^2) list
+variance list = (1 / count list) * (Prelude.sum $ map (\x -> (x - (meanList))^2) list)
+                where meanList = mean list
